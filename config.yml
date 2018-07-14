@@ -1,0 +1,9 @@
+devices:
+  living:
+    light:
+      ceiling:
+        platform: bticino
+        id: 02
+      wall:
+        platform: bticino
+        id: 01

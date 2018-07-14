@@ -1,0 +1,7 @@
+.tox
+venv
+.idea
+.coverage
+.pytest_cache
+MANIFEST
+__pycache__
