@@ -1,7 +1,9 @@
 """mqtt translator between technical and waf-full topics."""
 import logging
 import paho.mqtt.client as mqtt
+import json
 
+import load_config
 topics_config = {
     # state
     "bticino/1/02": "home/living/light/ceiling",
@@ -19,8 +21,7 @@ class Yalt:
         self._topics = {}
         self._logger = None
 
-    def run(self, topics):
-        self._topics = topics
+    def run(self):
         self._client.on_log = self.log_callback
         self._client.on_connect = self.on_connect
         self._client.on_message = self.on_message
@@ -35,20 +36,25 @@ class Yalt:
 
     def on_connect(self, client, userdata, flags, rc):
         """Subscribe to right topic."""
-        for topic in self._topics:
-            self._logger.info("subscribe to " + topic)
-        client.subscribe(
-            [(topic, 0) for topic in self._topics.keys()]
-        )
+        client.subscribe('mapping')
 
     def on_message(self, client, userdata, msg):
         """Translate topic when a message is received."""
-        self._logger.info(
-            'translating ' + msg.topic + ' to topic ' + self._topics[msg.topic]
-        )
-        client.publish(
-            self._topics[msg.topic], msg.payload, msg.qos, msg.retain
-        )
+        if msg.topic == 'mapping':
+            for topic in self._topics.keys():
+                client.unsubscribe(topic)
+            self._topics = json.loads(msg.payload.decode())
+            self._logger.info('updating topics mapping')
+            client.subscribe(
+                [(topic, 0) for topic in self._topics.keys()]
+            )
+        else:
+            self._logger.info(
+                'translating ' + msg.topic + ' to topic ' + self._topics[msg.topic]
+            )
+            client.publish(
+                self._topics[msg.topic], msg.payload, msg.qos, msg.retain
+            )
 
     def log_callback(self, client, userdata, level, buf):
         """Log when mqtt receive or post a message."""
@@ -69,4 +75,4 @@ if __name__ == '__main__':
 
     y = Yalt("localhost")
     y.enable_logger(None)
-    y.run(topics_config)
+    y.run()

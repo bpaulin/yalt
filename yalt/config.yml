@@ -3,7 +3,7 @@ devices:
     light:
       ceiling:
         platform: bticino
-        id: 02
+        id: '02'
       wall:
         platform: bticino
-        id: 01
+        id: '01'
